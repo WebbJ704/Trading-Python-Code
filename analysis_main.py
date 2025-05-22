@@ -3,7 +3,7 @@ import analysis as A
 def main():
    ticker = ['PLTR','AMD','NVDA','META','GOOGL','ASML','MSFT','AVGO','IBM','TSLA','TSM']
    start_date = "2010-10-01"
-   end_date = "2025-05-16" #y/m/d
+   end_date = "2025-05-21" #y/m/d
    api = 'SLNEQXVO3S7L9JTH' 
    plot_on = True
    tick = ['AMD']

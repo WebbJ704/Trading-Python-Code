@@ -175,13 +175,13 @@ def returns(data,rolling_window,ticker):
 def main():
    ticker = ['AMD','NVDA','META','GOOGL','ASML','MSFT','AVGO','IBM','TSLA']
    start_date = "2010-10-01"
-   end_date = "2025-14-04"
+   end_date = "2025-05-21"
    api = 'SLNEQXVO3S7L9JTH'
    RSI_overbought = 70
    RSI_underbought =30
    RSI_window = 14
-   short_window = 20
-   long_window = 200
+   short_window = 9
+   long_window = 21
 
    data = donwload_data(ticker,start_date,end_date,api)
 
