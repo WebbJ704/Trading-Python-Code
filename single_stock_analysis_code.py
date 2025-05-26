@@ -223,6 +223,7 @@ def calculate_cumulative_return(data):
 
 def plotting(data,ticker,return_window,std_dev,x,y,mean_Return,std_dev_Return,anual_vol,rsi_window,short_window,long_window, low_volatility ,high_volatility):
    # Get the latest signals (last non-None)
+    std_dev_daily = data['daily_return'].std() 
     latest_signal_RSI = data['RSI signal'].dropna().iloc[-1] if not data['RSI signal'].dropna().empty else None
     latest_signal_MA = data['MA Signals'].dropna().iloc[-1] if not data['MA Signals'].dropna().empty else None
     if data['ADX'].iloc[-1] > 25 :
@@ -252,13 +253,18 @@ def plotting(data,ticker,return_window,std_dev,x,y,mean_Return,std_dev_Return,an
     plt.show()
     
     plt.figure(figsize=(8,5))
-    sns.histplot(data['Returns'], bins=30, kde=True, color='blue')
-    plt.xlabel(f'{return_window} day return')
-    plt.axvline(data['Returns'].mean(), color='red', linestyle='dashed', label="Mean")
-    plt.axvline(data['Returns'].mean() + std_dev, color='green', linestyle='dashed', label="+1 Std Dev")
-    plt.axvline(data['Returns'].mean() - std_dev, color='green', linestyle='dashed', label="-1 Std Dev")
+    sns.histplot(data['daily_return']git , bins=30, kde=True, color='blue')
+    plt.axvline(data['daily_return'].mean(), color='red', linestyle='dashed', label="Mean")
+    plt.axvline(data['daily_return'].mean() + std_dev_daily, color='green', linestyle='dashed', label="+1 Std Dev")
+    plt.axvline(data['daily_return'].mean() - std_dev_daily, color='green', linestyle='dashed', label="-1 Std Dev")
+    plt.axvline(data['daily_return'].mean() + 2*std_dev_daily, color='orange', linestyle='dashed', label="+2 Std Dev")
+    plt.axvline(data['daily_return'].mean() - 2*std_dev_daily, color='orange', linestyle='dashed', label="-2 Std Dev")
+    plt.axvline(data['daily_return'].mean() + 3*std_dev_daily, color='black', linestyle='dashed', label="+3 Std Dev")
+    plt.axvline(data['daily_return'].mean() - 3*std_dev_daily, color='black', linestyle='dashed', label="-3 Std Dev")
     plt.ylabel("Frequency")
-    plt.title("Histogram of Data Distribution")
+    plt.xlabel('%Return')
+    plt.title("Histogram of Daily Retrun")
+    plt.legend(loc='upper left')
     plt.show()
 
     skew_value = skew(data['Returns'].dropna())
@@ -270,7 +276,7 @@ def plotting(data,ticker,return_window,std_dev,x,y,mean_Return,std_dev_Return,an
     plt.axvline(data['Returns'].mean() + std_dev, color='green', linestyle='dashed', label="+1 Std Dev")
     plt.axvline(data['Returns'].mean() - std_dev, color='green', linestyle='dashed', label="-1 Std Dev")
     plt.title(f'Normal Distribution of {ticker} {return_window} day Return')
-    plt.xlabel('Return')
+    plt.xlabel('%Return')
     plt.ylabel('Density')
     plt.legend(loc='upper left')
     plt.show()
