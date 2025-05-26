@@ -253,7 +253,7 @@ def plotting(data,ticker,return_window,std_dev,x,y,mean_Return,std_dev_Return,an
     plt.show()
     
     plt.figure(figsize=(8,5))
-    sns.histplot(data['daily_return']git , bins=30, kde=True, color='blue')
+    sns.histplot(data['daily_return'] , bins=30, kde=True, color='blue')
     plt.axvline(data['daily_return'].mean(), color='red', linestyle='dashed', label="Mean")
     plt.axvline(data['daily_return'].mean() + std_dev_daily, color='green', linestyle='dashed', label="+1 Std Dev")
     plt.axvline(data['daily_return'].mean() - std_dev_daily, color='green', linestyle='dashed', label="-1 Std Dev")
