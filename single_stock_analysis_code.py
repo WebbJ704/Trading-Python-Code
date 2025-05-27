@@ -101,25 +101,47 @@ def RSI(data,rolling_window,RSI_overbought,RSI_underbought):
      
     last_signal = None
     signals = []
-    for i in range(len(data['RSI'])):
-        if i >= rolling_window:
-            if data.iloc[i, data.columns.get_loc('RSI')] >= RSI_overbought and (last_signal != 'buy'):
-                signals.append('buy')
-                last_signal = 'buy'
-            elif data.iloc[i, data.columns.get_loc('RSI')] <= RSI_underbought and (last_signal != 'sell'):
-                signals.append('sell')
-                last_signal ='sell'
+    if data['ADX'].iloc[-1] > 25:
+        for i in range(len(data['RSI'])):
+            if i >= rolling_window:
+                if data.iloc[i, data.columns.get_loc('RSI')] >= RSI_overbought and (last_signal != 'buy'):
+                    signals.append('buy')
+                    last_signal = 'buy'
+                elif data.iloc[i, data.columns.get_loc('RSI')] <= RSI_underbought and (last_signal != 'sell'):
+                    signals.append('sell')
+                    last_signal ='sell'
+                else:
+                 signals.append(None)
             else:
              signals.append(None)
-        else:
+        
+        if len(signals) < len(data):
          signals.append(None)
-    
-    if len(signals) < len(data):
-     signals.append(None)
 
-    data['RSI signal'] = signals
-    data['RSI buy signals'] = data['RSI signal'] == 'buy'
-    data['RSI sell signals'] = data['RSI signal'] == 'sell'
+        data['RSI signal'] = signals
+        data['RSI buy signals'] = data['RSI signal'] == 'buy'
+        data['RSI sell signals'] = data['RSI signal'] == 'sell'
+    else:
+        for i in range(len(data['RSI'])):
+            if i >= rolling_window:
+                if data.iloc[i, data.columns.get_loc('RSI')] >= RSI_overbought and (last_signal != 'sell'):
+                    signals.append('sell')
+                    last_signal = 'sell'
+                elif data.iloc[i, data.columns.get_loc('RSI')] <= RSI_underbought and (last_signal != 'buy'):
+                    signals.append('buy')
+                    last_signal ='buy'
+                else:
+                 signals.append(None)
+            else:
+             signals.append(None)
+        
+        if len(signals) < len(data):
+         signals.append(None)
+
+        data['RSI signal'] = signals
+        data['RSI buy signals'] = data['RSI signal'] == 'buy'
+        data['RSI sell signals'] = data['RSI signal'] == 'sell'
+       
     return data
 
 

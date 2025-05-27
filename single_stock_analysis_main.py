@@ -35,13 +35,13 @@ def main():
     
     x,y = sm.prob_den_fs(mean_results,std_dev)
 
+    data = sm.calculate_adx(data,adx_window)
+
     data = sm.RSI(data,RSI_window,RSI_overbought,RSI_underbought)
 
     data = sm.moving_averages(data,short_window,long_window)
     
     data = sm.calculate_cumulative_return(data)
-
-    data = sm.calculate_adx(data,adx_window)
 
     data = sm.Sharp_ratio(data,anual_window)
 
