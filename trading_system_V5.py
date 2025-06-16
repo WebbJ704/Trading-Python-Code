@@ -1,17 +1,14 @@
 import pandas as pd
 import numpy as np
-import requests
-import yfinance as yf
 import matplotlib.pyplot as plt
 from alpha_vantage.timeseries import TimeSeries
-from bs4 import BeautifulSoup
 import seaborn as sns
 import os
-from matplotlib.ticker import MaxNLocator
+import matplotlib.dates as mdates
 
 # ----------------- CONFIG -----------------
 ALPHA_VANTAGE_API_KEY = 'SLNEQXVO3S7L9JTH'  
-SYMBOL = 'GLD'
+SYMBOL = 'AMD'
 INTERVAL = 'Day'
 # ------------------------------------------
 
@@ -126,7 +123,7 @@ def backtest(df):
             entry_date = df.index[i]
         elif position == 1:
             # Take Profit or Stop Loss exit
-            if df['Close'].iloc[i] >= entry_price * 1.2 or df['Close'].iloc[i] <= entry_price * 0.985:
+            if df['Close'].iloc[i] >= entry_price * 1.1 or df['Close'].iloc[i] <= entry_price * 0.92:
                 exit_price = df['Close'].iloc[i]
                 exit_date = df.index[i]
                 trade_return = (exit_price - entry_price) / entry_price
@@ -236,7 +233,7 @@ def get_bins(data):
     return min(max(int(np.sqrt(n)), 10), 100) 
 
 def plot(mean_sys, std_sys, sims_sys, sharp_sys, mean_stock, std_stock, sharp_stock, results):
-    df.to_csv('test')
+
 
     #Plot stock data mean, std, sharp
     fig1, ax1 = plt.subplots(1, 3, figsize=(20, 4))
@@ -252,11 +249,11 @@ def plot(mean_sys, std_sys, sims_sys, sharp_sys, mean_stock, std_stock, sharp_st
 
     #plot rolling window systm mean, std, sharp
     fig2, ax2 = plt.subplots(1, 3, figsize=(20, 4))
-    sns.histplot(results['MeanReturn'],bins=get_bins(results['MeanReturn']), kde=True, ax=ax2[0])
+    sns.kdeplot(results['MeanReturn'], ax=ax2[0])
     ax2[0].set_title('Distribution of rolling window system return Means')
-    sns.histplot(results['StdDev'],bins=get_bins(results['StdDev']), kde=True, ax=ax2[1])
+    sns.kdeplot(results['StdDev'], ax=ax2[1])
     ax2[1].set_title('Distribution of rolling window system retrun Standard Deviations')
-    sns.histplot(results['SharpeRatio'],bins=get_bins(results['SharpeRatio']), kde=True, ax=ax2[2])
+    sns.kdeplot(results['SharpeRatio'], ax=ax2[2])
     ax2[2].set_title('Dsitribution of rolling window system Sharp Ratios')
     plt.tight_layout()
     plt.show()
@@ -281,15 +278,17 @@ def plot(mean_sys, std_sys, sims_sys, sharp_sys, mean_stock, std_stock, sharp_st
     trade_signals = df[df['Signal'] == 1]
     fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(14, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
     # Price + EMAs + Signals (Top)
-    ax1.plot(df.index, df['Close'], label='Close Price', color='black')
-    ax1.plot(df.index, df['EMA_9'], label='EMA 9', color='gold')
-    ax1.plot(df.index, df['EMA_21'], label='EMA 21', color='blue')
+    ax1.plot(df['Close'], label='Close Price', color='black')
+    ax1.plot(df['EMA_9'], label='EMA 9', color='gold')
+    ax1.plot(df['EMA_21'], label='EMA 21', color='blue')
     ax1.scatter(trade_signals.index, trade_signals['Close'], color='green', label='Signal', zorder=5)
     ax1.set_title("Trade Signals")
     ax1.set_ylabel("Price")
     ax1.legend()
     ax1.tick_params(axis='x', rotation=0)
-    ax1.xaxis.set_major_locator(MaxNLocator(nbins=10))
+    ax1.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+    ax1.tick_params(axis='x', rotation=45)
     # RSI (Bottom)
     ax2.plot(df.index, df['RSI'], label='RSI', color='purple')
     ax2.axhline(70, linestyle='--', color='red', alpha=0.7)
@@ -298,6 +297,9 @@ def plot(mean_sys, std_sys, sims_sys, sharp_sys, mean_stock, std_stock, sharp_st
     ax2.set_xlabel("Date")
     ax2.set_ylabel("RSI")
     ax2.legend()
+    ax2.tick_params(axis='x', rotation=0)
+    ax2.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax2.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
     ax2.tick_params(axis='x', rotation=45)
     ax2.set_ylim(0, 100)
     plt.tight_layout()
@@ -305,12 +307,20 @@ def plot(mean_sys, std_sys, sims_sys, sharp_sys, mean_stock, std_stock, sharp_st
 
 
     trades['StrategyEquity'] = (1 + trades['Return']).cumprod()
-    plt.figure(figsize=(10, 5))
-    plt.plot(trades.index, trades['StrategyEquity'], label='Strategy')
-    plt.plot(trades.index, trades['BuyAndHold'], label='Buy & Hold', linestyle='--')
-    plt.legend()
-    plt.title('Cumulative Returns Comparison')
-    plt.grid()
+    # Ceeate figure and axis
+    fig, ax = plt.subplots(figsize=(10, 5))
+    # Plot the strategy and buy & hold
+    ax.plot(trades.index, trades['StrategyEquity'], label='Strategy')
+    ax.plot(trades.index, trades['BuyAndHold'], label='Buy & Hold', linestyle='--')
+    # Format the x-axis as datetime
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+    ax.tick_params(axis='x', rotation=45)
+    # Add titles and labels
+    ax.set_title('Cumulative Returns Comparison')
+    ax.legend()
+    ax.grid()
+    plt.tight_layout()
     plt.show()
 
 
@@ -328,6 +338,7 @@ if __name__ == "__main__":
     mean_sys, std_sys, sims_sys, sharp_sys = bootstap(trades)
     mean_stock, std_stock, sharp_stock = sharp_ratio(df)
     results = rolling_backtest_general(df)
+    trades.to_csv('test')
     plot(mean_sys,std_sys,sims_sys,sharp_sys, mean_stock, std_stock, sharp_stock, results)
 
 
