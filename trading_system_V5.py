@@ -117,7 +117,7 @@ def backtest(df):
     entry_date = None
 
     for i in range(1, len(df)):
-        if df['Signal'].iloc[i] == 1 and position == 0:
+        if df['Signal'].iloc[i-1] == 1 and position == 0: # i-1 to adjust for trade occuring day after close so dont get the close days returns 
             position = 1
             entry_price = df['Close'].iloc[i]
             entry_date = df.index[i]
@@ -180,10 +180,8 @@ def sharp_ratio(df):
     return c0_means, c0_deviations, sr
 
 def rolling_backtest_general(df):
-    if INTERVAL == 'Day':
-        period_offset=pd.DateOffset(years=2)
-    else:
-        period_offset=pd.DateOffset(weeks=1)
+
+    period_offset=pd.DateOffset(years=2)
 
     results = []
     # Ensure datetime index is sorted and converted
@@ -322,7 +320,6 @@ def plot(mean_sys, std_sys, sims_sys, sharp_sys, mean_stock, std_stock, sharp_st
     ax.grid()
     plt.tight_layout()
     plt.show()
-
 
 if __name__ == "__main__":
     print("Fetching Alpha Vantage minute data...")
