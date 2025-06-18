@@ -1,19 +1,18 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from alpha_vantage.timeseries import TimeSeries
 import seaborn as sns
 import os
 import matplotlib.dates as mdates
+import requests
 
 # ----------------- CONFIG -----------------
 ALPHA_VANTAGE_API_KEY = 'SLNEQXVO3S7L9JTH'  
 SYMBOL = 'IBM'
-INTERVAL = 'Day'
 # ------------------------------------------
 
 def fetch_alpha_vantage_data(ticker):
-    filename = f'{ticker}_{INTERVAL}_stock_data.CSV'
+    filename = f'f"{ticker}_daily_adjusted.csv"'
     
     if os.path.exists(filename):
         print(f"{filename} already exists. Loading from disk...")
@@ -22,18 +21,33 @@ def fetch_alpha_vantage_data(ticker):
         #df = df[df.index <= pd.to_datetime('2024-07-15')]
         return df
     else:
-        print(f"Downloading data for {ticker}...")
-        ts = TimeSeries(key=ALPHA_VANTAGE_API_KEY, output_format="pandas")
-        if INTERVAL == 'Day':
-            data, meta_data = ts.get_daily(symbol=ticker, outputsize="full")
-        else:
-            data, meta_data = ts.get_intraday(symbol=ticker, interval=INTERVAL, outputsize="full")
-        data.columns = ["Open", "High", "Low", "Close", "Volume"]
-        data = data.reset_index()
-        data["date"] = pd.to_datetime(data["date"])
-        df = data.set_index("date")
-        df = normalize_dataframe(df)
-        df.to_csv(filename)
+        print(f"Downloading adjusted data for {ticker}...")
+        url = f'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={ticker}&outputsize=full&apikey={ALPHA_VANTAGE_API_KEY}'
+        response = requests.get(url)
+        data = response.json()
+        print(data)
+        # Extract the adjusted daily time series
+        time_series = data.get("Time Series (Daily)", {})
+        rows = []
+        for date, daily_data in time_series.items():
+            rows.append({
+                "date": pd.to_datetime(date),
+                "open": float(daily_data["1. open"]),
+                "high": float(daily_data["2. high"]),
+                "low": float(daily_data["3. low"]),
+                "close": float(daily_data["4. close"]),
+                "adjusted_close": float(daily_data["5. adjusted close"]),
+                "volume": int(daily_data["6. volume"]),
+                "dividend_amount": float(daily_data["7. dividend amount"]),
+                "split_coefficient": float(daily_data["8. split coefficient"])
+            })
+
+        df = pd.DataFrame(rows)
+        df = df.sort_values("date").set_index("date")
+        # Now you have adjusted_close as a column in your DataFrame
+        print(df.head())
+        # You can save or use this df as you want
+        df.to_csv(f"{ticker}_daily_adjusted.csv")
         return df
 
 def normalize_dataframe(df):
@@ -47,7 +61,6 @@ def normalize_dataframe(df):
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
     return df
-
 
 def calculate_indicators(df):
     df['EMA_9'] = df['Close'].ewm(span=9, adjust=False).mean()
@@ -187,16 +200,8 @@ def sharp_ratio(df):
     return c0_means, c0_deviations, sr
 
 def rolling_backtest_general(df):
-    if INTERVAL == '60min':
-        period_offset = pd.DateOffset(years=2)
-    elif INTERVAL == '15min':
-        period_offset = pd.DateOffset(weeks=15)
-    elif INTERVAL == '5min':
-        period_offset = pd.DateOffset(minutes=50)
-    elif INTERVAL == '1min':
-        period_offset = pd.DateOffset(minutes=10)
-    elif INTERVAL == 'Day':
-        period_offset = pd.DateOffset(years=2)
+    
+    period_offset = pd.DateOffset(years=2)
 
     results = []
     # Ensure datetime index is sorted and converted
@@ -354,13 +359,3 @@ if __name__ == "__main__":
     print(f'latest signal was {BuySellDate[-1]}')
     trades.to_csv('Trades')
     plot(mean_sys,std_sys,sims_sys,sharp_sys, mean_stock, std_stock, sharp_stock, results)
-
-
-   
-
-
-
-
-
-        
-
