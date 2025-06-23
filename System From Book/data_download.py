@@ -2,7 +2,7 @@ import yfinance as yf
 import pandas as pd 
 import os
 
-def fetch_yf_data(ticker):
+def fetch_yf_data(ticker,start = '2020 -09-18'):
     filename = f'{ticker}_data_for_book.csv'
     
     if os.path.exists(filename):
@@ -11,6 +11,7 @@ def fetch_yf_data(ticker):
         df.reset_index(inplace=True) 
         df["date"] = pd.to_datetime(df["date"])
         df = df.set_index("date")
+        df = df[(df.index >= pd.to_datetime(start))]
         return df
     else:
         print(f"Downloading data for {ticker}...")

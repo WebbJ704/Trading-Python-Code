@@ -8,7 +8,7 @@ import matplotlib.dates as mdates
 
 # ----------------- CONFIG -----------------
 ALPHA_VANTAGE_API_KEY = 'SLNEQXVO3S7L9JTH'  
-SYMBOL = 'AMD'
+SYMBOL = 'IBM'
 INTERVAL = 'Day'
 # ------------------------------------------
 
@@ -57,8 +57,8 @@ def calculate_indicators(df):
     df['EMA_Strength_normalised'] = 20*(2*(df['EMA_stregth_clipped'] - df['EMA_stregth_clipped'].min() )/(df['EMA_stregth_clipped'].max()-df['EMA_stregth_clipped'].min()) - 1 )
 
 
-    df['MACD'] = df['Close'].ewm(span=12, adjust=False).mean() - df['Close'].ewm(span=26, adjust=False).mean()
-    df['MACD_Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+    df['MACD'] = df['Close'].ewm(span=9, adjust=False).mean() - df['Close'].ewm(span=21, adjust=False).mean()
+    df['MACD_Signal'] = df['MACD'].ewm(span=6, adjust=False).mean()
     df['VWAP'] = (df['Volume'] * (df['High'] + df['Low']) / 2).cumsum() / df['Volume'].cumsum()
     df['ATR'] = (df['High'] - df['Low']).rolling(window=14).mean()
     df['Volume_Spike'] = df['Volume'] > (df['Volume'].rolling(window=20).mean() * 1.5)
@@ -97,6 +97,12 @@ def calculate_indicators(df):
     df['%K'] = ((df['Close'] - low_min) / (high_max - low_min)) * 100
     df['%D'] = df['%K'].rolling(window=13).mean()
 
+    #Bollinger bands
+    df['BB_Middle'] = df['Close'].rolling(window=20).mean()
+    df['BB_StdDev'] = df['Close'].rolling(window=20).std()
+    df['BB_Upper'] = df['BB_Middle'] + 1.5 * df['BB_StdDev']
+    df['BB_Lower'] = df['BB_Middle'] - 1.5 * df['BB_StdDev']
+
     return df
 
 def stock_viability(df):
@@ -122,19 +128,19 @@ def generate_signals(df):
             #(df['EMA_9'].iloc[i] > df['EMA_21'].iloc[i])###  amd strategy 
 
             #df['EMA_9'].iloc[i] > df['EMA_21'].iloc[i] 
-            #df['MACD'].iloc[i] > df['MACD_Signal'].iloc[i] #and #or
+            #df['MACD'].iloc[i] > df['MACD_Signal'].iloc[i] and #or
             #df['RSI(14)'].iloc[i] >= 70 #and
             #df['ADX'].iloc[i] > 25 #and
             #df['Close'].iloc[i] > df['VWAP'].iloc[i] and
             #df['Volume_Spike'].iloc[i] #and
             #df['ATR'].iloc[i] > df['ATR'].mean()
              
-            df['EMA_Strength_normalised'].iloc[i] > 0
-            # #stochiastic buy signal  
-            # df['%K'].iloc[i] > df['%D'].iloc[i] and
-            # df['%K'].iloc[i].shift(1) <= df['%D'].iloc[i].shift(1) and  # %K crossed above %D
-            # df['%K'].iloc[i] < lower_threshold and
-            # df['%D'].iloc[i] < lower_threshold
+            #df['EMA_Strength_normalised'].iloc[i] > 0
+            #stochiastic buy signal  
+            #df['%K'].iloc[i] > df['%D'].iloc[i]#and # %K crossed above %D
+            #df['%K'].iloc[i] < lower_threshold and
+            #df['%D'].iloc[i] < lower_threshold
+            df['Close'].iloc[i] < df['BB_Lower'].iloc[i]
         ):
             df.loc[df.index[i], 'Signal'] = 1
     return df
@@ -156,19 +162,19 @@ def backtest(df):
         elif position == 1:
             # Take Profit or Stop Loss exit
             #if df['Close'].iloc[i] >= entry_price * 1.1 or df['Close'].iloc[i] <= entry_price * 0.92:
-            #if df['MACD'].iloc[i] < df['MACD_Signal'].iloc[i]:
+            #if (df['MACD'].iloc[i] < df['MACD_Signal'].iloc[i] and df['ADX'].iloc[i] > 25):
             #if df['Close'].iloc[i] >= entry_price * 1.1 or df['RSI(14)'].iloc[i] <= 30 or df['EMA_9'].iloc[i] < df['EMA_21'].iloc[i] or df['Close'].iloc[i] <= entry_price * 0.94: #AMD 
 
             #if ((df['RSI(14)'].iloc[i] <= 30 and df['ADX'].iloc[i] > 25) or 
                 # (df['EMA_9'].iloc[i] < df['EMA_21'].iloc[i] and df['ADX'].iloc[i] > 25)): #google
              
             # stochiastic buy signal 
-            # if ((df['%K'] < df['%D']) and
-            #      (df['%K'].shift(1) >= df['%D'].shift(1)) and  # %K crossed below %D
-            #        df['%K'] > upper_threshold and
-            #          (df['%D'] > upper_threshold)):
+            #if (df['%K'].iloc[i] < df['%D'].iloc[i]): #and # %K crossed below %D
+                  # df['%K'].iloc[i] > upper_threshold and
+                   #  (df['%D'].iloc[i] > upper_threshold)):
 
-            if df['EMA_Strength_normalised'].iloc[i] < 0:
+            #if df['EMA_Strength_normalised'].iloc[i] < 0:
+            if  df['Close'].iloc[i] > df['BB_Upper'].iloc[i]:
 
                 exit_price = df['Close'].iloc[i]
                 exit_date = df.index[i]
@@ -198,7 +204,7 @@ def bootstap(trades,n_simulations=1000):
     c0_deviations = []
     sharp_ratio = []
     for i in range(1, n_simulations):
-        sample = trades['Return'].sample(10, replace = True, random_state = i)
+        sample = trades['Return'].sample(len(trades), replace = True, random_state = i)
         sample_mean = sample.mean()
         sample_std = sample.std()
         c0_means.append(sample_mean)
@@ -206,7 +212,7 @@ def bootstap(trades,n_simulations=1000):
         sharp_ratio.append(sample_mean/sample_std)
     simulations = []
     for i in range(1, n_simulations):
-        sample = trades['Return'].sample(10, replace = True, random_state = i)
+        sample = trades['Return'].sample(len(trades), replace = True, random_state = i)
         cumulative_return = np.prod(1 + sample)
         simulations.append(cumulative_return)
     return c0_means , c0_deviations, simulations, sharp_ratio
@@ -227,16 +233,8 @@ def sharp_ratio_stock(df):
     return c0_means, c0_deviations, sr
 
 def rolling_backtest_general(df):
-    if INTERVAL == '60min':
-        period_offset = pd.DateOffset(years=2)
-    elif INTERVAL == '15min':
-        period_offset = pd.DateOffset(weeks=15)
-    elif INTERVAL == '5min':
-        period_offset = pd.DateOffset(minutes=50)
-    elif INTERVAL == '1min':
-        period_offset = pd.DateOffset(minutes=10)
-    elif INTERVAL == 'Day':
-        period_offset = pd.DateOffset(years=1)
+  
+    period_offset = pd.DateOffset(years=1)
 
     results = []
     # Ensure datetime index is sorted and converted
@@ -301,20 +299,19 @@ def plot(mean_sys, std_sys, sims_sys, sharp_sys, mean_stock, std_stock, sharp_st
     ax1[2].axvline(np.mean(sharp_stock) - 2 * np.std(sharp_stock), linestyle='--', label='-2σ')
     ax1[2].set_title('Dsitribution of Sharp Ratios')
     ax1[2].legend()
-    plt.xlabel('%Return')
     plt.tight_layout()
     plt.show()
 
     #plot rolling window systm mean, std, sharp
     fig2, ax2 = plt.subplots(1, 3, figsize=(20, 4))
     sns.kdeplot(results['MeanReturn'], ax=ax2[0])
-    ax2[0].set_title('Distribution of rolling window system return Means')
+    ax2[0].set_title('Distribution of anual system return Means')
     sns.kdeplot(results['StdDev'], ax=ax2[1])
-    ax2[1].set_title('Distribution of rolling window system retrun Standard Deviations')
+    ax2[1].set_title('Distribution of anual system retrun Standard Deviations')
     sns.kdeplot(results['SharpeRatio'], ax=ax2[2])
     ax2[2].axvline(results['SharpeRatio'].mean() + 2 * results['SharpeRatio'].std(), linestyle='--', label='+2σ')
     ax2[2].axvline(results['SharpeRatio'].mean() - 2 * results['SharpeRatio'].std(), linestyle='--', label='-2σ')
-    ax2[2].set_title('Dsitribution of rolling window system Sharp Ratios')
+    ax2[2].set_title('Dsitribution of anual Sharp Ratios')
     ax2[2].legend()
     plt.tight_layout()
     plt.show()
