@@ -8,7 +8,7 @@ import matplotlib.dates as mdates
 
 # ----------------- CONFIG -----------------
 ALPHA_VANTAGE_API_KEY = 'SLNEQXVO3S7L9JTH'  
-SYMBOL = 'IBM'
+SYMBOL = 'AMD'
 INTERVAL = 'Day'
 # ------------------------------------------
 
@@ -19,7 +19,7 @@ def fetch_alpha_vantage_data(ticker):
         print(f"{filename} already exists. Loading from disk...")
         df = pd.read_csv(filename, index_col=0)
         df = normalize_dataframe(df)
-        #df = df[df.index <= pd.to_datetime('2024-07-15')]
+        df = df[(df.index <= pd.to_datetime('2025-06-18')) & (df.index >= pd.to_datetime('2000 -09-18')) ]
         return df
     else:
         print(f"Downloading data for {ticker}...")
@@ -85,6 +85,12 @@ def calculate_indicators(df):
     adx = dx.rolling(window=14).mean()
     df['ADX'] = adx
 
+    # stochiastic oscilator 
+    low_min = df['Low'].rolling(window=14).min()
+    high_max = df['High'].rolling(window=14).max()
+    df['%K'] = ((df['Close'] - low_min) / (high_max - low_min)) * 100
+    df['%D'] = df['%K'].rolling(window=13).mean()
+
     return df
 
 def stock_viability(df):
@@ -98,17 +104,30 @@ def stock_viability(df):
         
 def generate_signals(df):
     df['Signal'] = 0
+    lower_threshold=20
     for i in range(1,len(df)):
         if (
-            (df['ADX'].iloc[i] > 25 and df['RSI(14)'].iloc[i] >= 70) or
-            ( df['EMA_9'].iloc[i] > df['EMA_21'].iloc[i])
-            #df['EMA_9'].iloc[i] > df['EMA_21'].iloc[i] or
-            #df['MACD'].iloc[i] > df['MACD_Signal'].iloc[i] or
-            #df['RSI(14)'].iloc[i] >= 70 and
+            #(df['ADX'].iloc[i] > 25 and df['EMA_9'].iloc[i] > df['EMA_21'].iloc[i]) or 
+            #(df['RSI(14)'].iloc[i] <= 30 and df['ADX'].iloc[i] < 25) ### google 
+
+            #df['RSI(14)'].iloc[i] <= 30 or #and df['ADX'].iloc[i] > 25
+
+            #(df['RSI(14)'].iloc[i] >= 70) or
+            #(df['EMA_9'].iloc[i] > df['EMA_21'].iloc[i])###  amd strategy 
+
+            #df['EMA_9'].iloc[i] > df['EMA_21'].iloc[i] 
+            df['MACD'].iloc[i] > df['MACD_Signal'].iloc[i] and #or
+            #df['RSI(14)'].iloc[i] >= 70 #and
             #df['ADX'].iloc[i] > 25 #and
             #df['Close'].iloc[i] > df['VWAP'].iloc[i] and
             #df['Volume_Spike'].iloc[i] #and
             #df['ATR'].iloc[i] > df['ATR'].mean()
+             
+            #stochiastic buy signal  
+            df['%K'] > df['%D'] and
+            df['%K'].shift(1) <= df['%D'].shift(1) and  # %K crossed above %D
+            df['%K'] < lower_threshold and
+            df['%D'] < lower_threshold
         ):
             df.loc[df.index[i], 'Signal'] = 1
     return df
@@ -121,15 +140,27 @@ def backtest(df):
     entry_date = None
 
     for i in range(1, len(df)):
+        upper_threshold = 80
         if df['Signal'].iloc[i-1] == 1 and position == 0: # i-1 to adjust for trade occuring day after close so dont get the close days returns 
             position = 1
-            entry_price = df['Close'].iloc[i]
+            entry_price = df['Open'].iloc[i]
             entry_date = df.index[i]
             Signal.append(f'Buy - {entry_date , entry_price}')
         elif position == 1:
             # Take Profit or Stop Loss exit
             #if df['Close'].iloc[i] >= entry_price * 1.1 or df['Close'].iloc[i] <= entry_price * 0.92:
-            if df['RSI(14)'].iloc[i] <= 30:
+            if df['MACD'].iloc[i] < df['MACD_Signal'].iloc[i]:
+            #if df['Close'].iloc[i] >= entry_price * 1.1 or df['RSI(14)'].iloc[i] <= 30 or df['EMA_9'].iloc[i] < df['EMA_21'].iloc[i] or df['Close'].iloc[i] <= entry_price * 0.94: #AMD 
+
+            #if ((df['RSI(14)'].iloc[i] <= 30 and df['ADX'].iloc[i] > 25) or 
+                # (df['EMA_9'].iloc[i] < df['EMA_21'].iloc[i] and df['ADX'].iloc[i] > 25)): #google
+             
+            # stochiastic buy signal 
+            # if ((df['%K'] < df['%D']) and
+            #      (df['%K'].shift(1) >= df['%D'].shift(1)) and  # %K crossed below %D
+            #        df['%K'] > upper_threshold and
+            #          (df['%D'] > upper_threshold)):
+
                 exit_price = df['Close'].iloc[i]
                 exit_date = df.index[i]
                 trade_return = (exit_price - entry_price) / entry_price
@@ -354,13 +385,3 @@ if __name__ == "__main__":
     print(f'latest signal was {BuySellDate[-1]}')
     trades.to_csv('Trades')
     plot(mean_sys,std_sys,sims_sys,sharp_sys, mean_stock, std_stock, sharp_stock, results)
-
-
-   
-
-
-
-
-
-        
-
