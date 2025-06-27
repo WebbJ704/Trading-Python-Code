@@ -15,10 +15,10 @@ def fetch_yf_data(ticker,start = '2020 -09-18'):
         return df
     else:
         print(f"Downloading data for {ticker}...")
-        data = yf.download(ticker) 
+        data = yf.download(ticker, auto_adjust=False) 
         data.reset_index(inplace=True) 
-        df = data[["Date", "Open", "High", "Low", "Close", "Volume"]]
-        df.columns = ["date", "Open", "High", "Low", "Close", "Volume"]
+        df = data[["Date", "Open", "High", "Low", "Adj Close", "Volume"]]
+        df.columns = ["date", "Open", "High", "Low", "Adj Close", "Volume"]
         df["date"] = pd.to_datetime(df["date"]) 
         df = df.set_index("date")
         df.to_csv(filename)

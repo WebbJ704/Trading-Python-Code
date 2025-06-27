@@ -1,0 +1,61 @@
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+def plot(df, trades):
+     
+    trade_signals = df[df['Signal'] == 1]
+    fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(14, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
+    # Price + EMAs + Signals (Top)
+    ax1.plot(df['Adj Close'], label='Adj Close Price', color='black')
+    ax1.plot(df['EMA_short'], label='EMA short', color='orange')
+    ax1.plot(df['EMA_long'], label='EMA long', color='blue')
+    ax1.scatter(trade_signals.index, trade_signals['Adj Close'], color='green', label='Signal', zorder=5)
+    ax1.set_title("Trade Signals")
+    ax1.set_ylabel("Price")
+    ax1.legend()
+    ax1.tick_params(axis='x', rotation=0)
+    ax1.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    ax1.tick_params(axis='x', rotation=45)
+    # MACD (Bottom) 
+    ax2.plot(df['MACD_Signal'], label='MACD signal', color='gold')
+    ax2.plot(df['MACD'], label='MACD', color='green')
+    ax2.set_title("MACD")
+    ax2.set_xlabel("Date")
+    ax2.set_ylabel("MACD")
+    ax2.legend()
+    ax2.tick_params(axis='x', rotation=0)
+    ax2.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax2.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    ax2.tick_params(axis='x', rotation=45)
+    # # RSI (Bottom)
+    # ax2.plot(df.index, df['RSI'], label='RSI', color='purple')
+    # ax2.axhline(70, linestyle='--', color='red', alpha=0.7)
+    # ax2.axhline(30, linestyle='--', color='green', alpha=0.7)
+    # ax2.set_title("Relative Strength Index (RSI)")
+    # ax2.set_xlabel("Date")
+    # ax2.set_ylabel("RSI")
+    # ax2.legend()
+    # ax2.tick_params(axis='x', rotation=0)
+    # ax2.xaxis.set_major_locator(mdates.AutoDateLocator())
+    # ax2.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+    # ax2.tick_params(axis='x', rotation=45)
+    # ax2.set_ylim(0, 100)
+    plt.tight_layout()
+    plt.show()
+
+    # Ceeate figure and axis
+    fig, ax = plt.subplots(figsize=(10, 5))
+    # Plot the strategy and buy & hold
+    ax.plot(trades.index, trades['StrategyEquity'], label='Strategy')
+    ax.plot(trades.index, trades['BuyAndHold'], label='Buy & Hold', linestyle='--')
+    # Format the x-axis as datetime
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+    ax.tick_params(axis='x', rotation=45)
+    # Add titles and labels
+    ax.set_title('Cumulative Returns Comparison')
+    ax.legend()
+    ax.grid()
+    plt.tight_layout()
+    plt.show()

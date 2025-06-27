@@ -15,7 +15,7 @@ api = REST(API_KEY, SECRET_KEY, BASE_URL)
 
 # ----------------- CONFIG -----------------
 ALPHA_VANTAGE_API_KEY = 'SLNEQXVO3S7L9JTH'  
-SYMBOL = ['AMD','MSFT','NVDA','GOOGL','META','TSM','IBM']
+SYMBOL = ['AMD','NVDA']
 INTERVAL = 'Day'
 # ------------------------------------------
 

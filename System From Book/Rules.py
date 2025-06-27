@@ -14,15 +14,15 @@ def Rules(df, **kwargs):
     BB_window   = kwargs.get("BB_window", 20)
     BB_std_dev  = kwargs.get("BB_std_dev", 2)
 
-    df['EMA_short'] = df['Close'].ewm(span=EMA_short, adjust=False).mean()
-    df['EMA_long'] = df['Close'].ewm(span=EMA_long, adjust=False).mean()
+    df['EMA_short'] = df['Adj Close'].ewm(span=EMA_short, adjust=False).mean()
+    df['EMA_long'] = df['Adj Close'].ewm(span=EMA_long, adjust=False).mean()
 
     # moving average crossover divergence 
     df['MACD'] = df['EMA_short'] - df['EMA_long']
     df['MACD_Signal'] = df['MACD'].ewm(span=EMA_signal, adjust=False).mean()
 
     # RSI (Relative Strength Index)
-    delta = df['Close'].diff()
+    delta = df['Adj Close'].diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
     avg_gain = gain.rolling(window=rsi_window).mean()
@@ -33,7 +33,7 @@ def Rules(df, **kwargs):
     # stochiastic oscilator 
     low_min = df['Low'].rolling(window=k_period).min()
     high_max = df['High'].rolling(window=k_period).max()
-    df['%K'] = ((df['Close'] - low_min) / (high_max - low_min)) * 100
+    df['%K'] = ((df['Adj Close'] - low_min) / (high_max - low_min)) * 100
     df['%D'] = df['%K'].rolling(window=d_period).mean()
 
     # ADX (Average Directional Index)
@@ -42,8 +42,8 @@ def Rules(df, **kwargs):
     plus_dm = np.where((high_diff > low_diff) & (high_diff > 0), high_diff, 0.0)
     minus_dm = np.where((low_diff > high_diff) & (low_diff > 0), low_diff, 0.0)
     tr1 = df['High'] - df['Low']
-    tr2 = abs(df['High'] - df['Close'].shift(1))
-    tr3 = abs(df['Low'] - df['Close'].shift(1))
+    tr2 = abs(df['High'] - df['Adj Close'].shift(1))
+    tr3 = abs(df['Low'] - df['Adj Close'].shift(1))
     tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
     atr = tr.rolling(window=atr_window).mean()
     plus_dm = pd.Series(plus_dm, index=df.index)
@@ -64,8 +64,8 @@ def Rules(df, **kwargs):
     df['Volume_Spike'] = df['Volume'] > (df['Volume'].rolling(window=Vol_window).mean() * 1.5)
 
     #Bollinger bands
-    df['BB_Middle'] = df['Close'].rolling(window=BB_window).mean()
-    df['BB_StdDev'] = df['Close'].rolling(window=BB_window).std()
+    df['BB_Middle'] = df['Adj Close'].rolling(window=BB_window).mean()
+    df['BB_StdDev'] = df['Adj Close'].rolling(window=BB_window).std()
     df['BB_Upper'] = df['BB_Middle'] + BB_std_dev * df['BB_StdDev']
     df['BB_Lower'] = df['BB_Middle'] - BB_std_dev * df['BB_StdDev']
 

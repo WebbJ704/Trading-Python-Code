@@ -8,7 +8,7 @@ import matplotlib.dates as mdates
 
 # ----------------- CONFIG -----------------
 ALPHA_VANTAGE_API_KEY = 'SLNEQXVO3S7L9JTH'  
-SYMBOL = 'IBM'
+SYMBOL = 'AMD'
 INTERVAL = 'Day'
 # ------------------------------------------
 
@@ -19,7 +19,7 @@ def fetch_alpha_vantage_data(ticker):
         print(f"{filename} already exists. Loading from disk...")
         df = pd.read_csv(filename, index_col=0)
         df = normalize_dataframe(df)
-        df = df[(df.index <= pd.to_datetime('2025-06-18')) & (df.index >= pd.to_datetime('2020 -09-18')) ]
+        df = df[(df.index >= pd.to_datetime('2023-07-18')) ]
         return df
     else:
         print(f"Downloading data for {ticker}...")
@@ -127,8 +127,8 @@ def generate_signals(df):
             #(df['RSI(14)'].iloc[i] >= 70) or
             #(df['EMA_9'].iloc[i] > df['EMA_21'].iloc[i])###  amd strategy 
 
-            #df['EMA_9'].iloc[i] > df['EMA_21'].iloc[i] 
-            #df['MACD'].iloc[i] > df['MACD_Signal'].iloc[i] and #or
+            #df['EMA_9'].iloc[i] > df['EMA_21'].iloc[i] #or
+            df['MACD'].iloc[i] > df['MACD_Signal'].iloc[i] #or
             #df['RSI(14)'].iloc[i] >= 70 #and
             #df['ADX'].iloc[i] > 25 #and
             #df['Close'].iloc[i] > df['VWAP'].iloc[i] and
@@ -140,7 +140,7 @@ def generate_signals(df):
             #df['%K'].iloc[i] > df['%D'].iloc[i]#and # %K crossed above %D
             #df['%K'].iloc[i] < lower_threshold and
             #df['%D'].iloc[i] < lower_threshold
-            df['Close'].iloc[i] < df['BB_Lower'].iloc[i]
+            #df['Close'].iloc[i] < df['BB_Lower'].iloc[i]
         ):
             df.loc[df.index[i], 'Signal'] = 1
     return df
@@ -162,7 +162,7 @@ def backtest(df):
         elif position == 1:
             # Take Profit or Stop Loss exit
             #if df['Close'].iloc[i] >= entry_price * 1.1 or df['Close'].iloc[i] <= entry_price * 0.92:
-            #if (df['MACD'].iloc[i] < df['MACD_Signal'].iloc[i] and df['ADX'].iloc[i] > 25):
+            if df['MACD'].iloc[i] < df['MACD_Signal'].iloc[i]: #(df['EMA_9'].iloc[i] < df['EMA_21'].iloc[i]): #and df['ADX'].iloc[i] > 25):
             #if df['Close'].iloc[i] >= entry_price * 1.1 or df['RSI(14)'].iloc[i] <= 30 or df['EMA_9'].iloc[i] < df['EMA_21'].iloc[i] or df['Close'].iloc[i] <= entry_price * 0.94: #AMD 
 
             #if ((df['RSI(14)'].iloc[i] <= 30 and df['ADX'].iloc[i] > 25) or 
@@ -174,7 +174,7 @@ def backtest(df):
                    #  (df['%D'].iloc[i] > upper_threshold)):
 
             #if df['EMA_Strength_normalised'].iloc[i] < 0:
-            if  df['Close'].iloc[i] > df['BB_Upper'].iloc[i]:
+            #if  df['Close'].iloc[i] > df['BB_Upper'].iloc[i]:
 
                 exit_price = df['Close'].iloc[i]
                 exit_date = df.index[i]
@@ -350,6 +350,7 @@ def plot(mean_sys, std_sys, sims_sys, sharp_sys, mean_stock, std_stock, sharp_st
     ax1.xaxis.set_major_locator(mdates.AutoDateLocator())
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
     ax1.tick_params(axis='x', rotation=45)
+    ax1.grid()
     # RSI (Bottom)
     ax2.plot(df.index, df['RSI(14)'], label='RSI(14)', color='purple')
     ax2.axhline(70, linestyle='--', color='red', alpha=0.7)
@@ -364,6 +365,7 @@ def plot(mean_sys, std_sys, sims_sys, sharp_sys, mean_stock, std_stock, sharp_st
     ax2.tick_params(axis='x', rotation=45)
     ax2.set_ylim(0, 100)
     plt.tight_layout()
+    ax2.grid()
     plt.show()
 
 
