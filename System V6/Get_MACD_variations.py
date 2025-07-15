@@ -93,7 +93,10 @@ def back_test_variations(df, macd_settings):
                                         use_volume_spike=False,
                                         use_stochastic=False,
                                         use_BB=False )
-            trades, signal = bt.backtest(df)
+            trades, signal = bt.backtest(df,use_ema_exit = True)
+            if trades.empty:
+                print(f"⚠️ Skipping empty trades for setting {setting['name']}")
+                continue
             trades['StrategyEquity'] = (1 + trades['Return']).cumprod()
             sharp = trades["Return"].mean() / trades['Return'].std()
             system_output.append({  'setting': setting['name'],
@@ -129,21 +132,23 @@ def ML_settings(model_data, min_score=0.25, max_retries=5):
     X = df_model[['fast', 'slow', 'signal']]
     y = df_model['sharp']
 
-    score = 0
+    test_score = 0
     retries = 0
+    train_score = 0
 
-    while score < min_score and retries < max_retries:
+    while test_score < min_score and retries < max_retries:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-        model = RandomForestRegressor(n_estimators=100, random_state=retries)  # vary random_state
+        model = RandomForestRegressor(n_estimators=100, max_depth = 5, random_state=retries)  # vary random_state
         model.fit(X_train, y_train)
-        score = model.score(X_test, y_test)
+        train_score = model.score(X_train, y_train)
+        test_score = model.score(X_test, y_test)
         retries += 1
 
-        if score < min_score:
-            print(f"Retrying model training... (attempt {retries}, score={score:.3f})")
+        if test_score < min_score:
+            print(f"Retrying model training... (attempt {retries}, score={test_score:.3f})")
 
-    if score < min_score:
-        print(f"Warning: Final model score ({score:.3f}) is still below {min_score}")
+    if test_score < min_score:
+        print(f"Warning: Final model score ({test_score:.3f}) is still below {min_score}")
 
     # Predict over grid
     new_params = pd.DataFrame(product(range(5, 21), range(21, 51), range(5, 26)), columns=['fast', 'slow', 'signal'])
@@ -152,7 +157,8 @@ def ML_settings(model_data, min_score=0.25, max_retries=5):
 
     best = new_params.sort_values('predicted_sharpe', ascending=False).head(20)
     print("Best predicted MACD params:\n", best)
-    print("Final model score:", round(score, 4))
+    print("Final model test score:", round(test_score, 4))
+    print("Final model train score:", round(train_score, 4))
 
     fast_range = [best['fast'].min(), best['fast'].max()]
     slow_range = [best['slow'].min(), best['slow'].max()]
