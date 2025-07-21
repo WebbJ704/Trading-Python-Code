@@ -10,7 +10,7 @@ import os
 from matplotlib.ticker import MaxNLocator
 
 # ----------------- CONFIG -----------------
-ALPHA_VANTAGE_API_KEY = 'SLNEQXVO3S7L9JTH'  # Replace with your real key
+ALPHA_VANTAGE_API_KEY = ''  # Replace with your real key
 SYMBOL = 'AMD'
 INTERVAL = '5min'
 # ------------------------------------------
