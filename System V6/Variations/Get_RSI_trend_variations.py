@@ -92,7 +92,6 @@ def back_test_variations(df, RSI_settings):
                                     'Retrun Std': trades['Return'].std(),
                                     'No.of Trades': len(trades),
                                 }
-                df.to_csv('test')
                 best_trades = trades
                 best_df = df
                 sig = signal[-1]

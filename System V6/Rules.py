@@ -12,8 +12,8 @@ def Rules(df, **kwargs):
     atr_window  = kwargs.get("atr_window", 14)
     adx_window  = kwargs.get("adx_window", atr_window)
     BB_window   = kwargs.get("BB_window", 20)
-    BB_std_dev_top  = kwargs.get("BB_std_dev_top", 2)
-    BB_std_dev_bottom  = kwargs.get("BB_std_dev_bottom", 2)
+    BB_std_dev_top  = kwargs.get("BB_std_dev_top", 1)
+    BB_std_dev_bottom  = kwargs.get("BB_std_dev_bottom", 0.5)
 
     df['EMA_short'] = df['Close'].ewm(span=EMA_short, adjust=False).mean()
     df['EMA_long'] = df['Close'].ewm(span=EMA_long, adjust=False).mean()

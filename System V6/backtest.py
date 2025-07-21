@@ -10,7 +10,7 @@ def backtest(df, **kwargs):
     # Default exit condition toggles
     use_take_profit_stop_loss = kwargs.get("use_take_profit_stop_loss", False)
     take_profit = kwargs.get("take_profit", 1.1)
-    stop_loss = kwargs.get("stop_loss", 0.94)
+    stop_loss = kwargs.get("stop_loss", 0.92)
 
     use_macd_exit = kwargs.get("use_macd_exit", False)
 
@@ -50,8 +50,8 @@ def backtest(df, **kwargs):
 
             if use_take_profit_stop_loss:
                 exit_conditions.append(
-                    df['Adj Close'].iloc[i] >= entry_price * take_profit or
-                    df['Adj Close'].iloc[i] <= entry_price * stop_loss
+                    df['Close'].iloc[i] >= entry_price * take_profit or
+                    df['Close'].iloc[i] <= entry_price * stop_loss
                 )
 
             if use_macd_exit:

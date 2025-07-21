@@ -23,9 +23,9 @@ def MACD_variations(df):
     return setting , best_df , best_trades 
 
 def MACD_settings(df, sl = [21,50], f = [5,20], si = [5,25]):
-    fasts = np.random.randint(f[0], f[1], size=100) # best range 7,9
-    slows = np.random.randint(sl[0], sl[1], size=100) # best range 22,27
-    signals = np.random.randint(si[0], si[1], size=100) # best range 12,17
+    fasts = np.random.randint(f[0], f[1]+1, size=100) # best range 7,9
+    slows = np.random.randint(sl[0], sl[1]+1, size=100) # best range 22,27
+    signals = np.random.randint(si[0], si[1]+1, size=100) # best range 12,17
 
     """For Specific Settings"""
     # fasts = [8,9,11,13,11]
@@ -92,8 +92,8 @@ def back_test_variations(df, macd_settings):
                                         use_ATR=False,
                                         use_volume_spike=False,
                                         use_stochastic=False,
-                                        use_BB=False )
-            trades, signal = bt.backtest(df,use_ema_exit = True)
+                                        use_BB=True )
+            trades, signal = bt.backtest(df,use_macd_exit = True, use_bb_exit = True)
             if trades.empty:
                 print(f"⚠️ Skipping empty trades for setting {setting['name']}")
                 continue
@@ -127,7 +127,7 @@ def back_test_variations(df, macd_settings):
             print(f"\rProgress: {idx}/{total} ({percent:.1f}%)",end='')
     return model_data, system_output , sig , best_df , best_trades, best_system
 
-def ML_settings(model_data, min_score=0.25, max_retries=5):
+def ML_settings(model_data, min_score=0.5, max_retries=10):
     df_model = pd.DataFrame(model_data)
     X = df_model[['fast', 'slow', 'signal']]
     y = df_model['sharp']

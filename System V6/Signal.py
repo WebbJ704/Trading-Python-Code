@@ -54,13 +54,14 @@ def generate_signals(df, **kwargs):
             )
 
         if use_BB:
-            conditions.append(df['Close'].iloc[i] < df['BB_Lower'].iloc[i])
+            conditions.append(df['Close'].iloc[i] < df['BB_Lower'].iloc[i] and 
+                              df['Close'].iloc[i] > df['BB_Middle'].iloc[i])
 
         if use_buy_sell:
             conditions.append(df['Close'].iloc[i] < df['Close'].iloc[i-1]*buy_factor)
 
         # Only assign signal if ALL enabled conditions are met
-        if all(conditions):
+        if any(conditions):
             df.loc[df.index[i], 'Signal'] = 1
 
     return df
