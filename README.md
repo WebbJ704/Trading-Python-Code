@@ -9,29 +9,29 @@ It’s designed to develop and evaluate rule-based strategies for different stoc
 
 ## Key Features
 
-- ✅ **Technical Indicator Optimization**  
+- **Technical Indicator Optimization**  
   - MACD, Bollinger Bands, and more  
   - Evaluates variations via backtesting
 
-- ✅ **Machine Learning for Hyperparameter Tuning**  
+- **Machine Learning for Hyperparameter Tuning**  
   - Uses optimization techniques (e.g., Bayesian optimization, grid/random search) to find best indicator parameters  
   - Integrates easily with `scikit-learn` or custom models
 
-- ✅ **Custom Signal Generation**  
+- **Custom Signal Generation**  
   - Rule-based logic for MACD, Bollinger Bands, etc.  
   - Easily extendable with RSI, ADX, Stochastic, etc.
 
-- ✅ **Backtesting Engine**  
+- **Backtesting Engine**  
   - Entry/exit logic, trade evaluation  
   - Bootstrapped Sharpe ratio + equity curve visualization
 
-- ✅ **Portfolio Optimization**  
+- **Portfolio Optimization**  
   - Mean-variance optimization (Sharpe-maximizing weights)  
   - Option to input manual weights
 
 ---
 
-## 🤖 Machine Learning Component
+## Machine Learning Component
 
 - **Hyperparameter Optimization** is used to tune strategy parameters (e.g., MACD fast/slow periods) for each stock.
 - Techniques used:
@@ -41,7 +41,7 @@ It’s designed to develop and evaluate rule-based strategies for different stoc
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```bash
 .
