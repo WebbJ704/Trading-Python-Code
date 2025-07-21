@@ -7,7 +7,7 @@ import os
 import matplotlib.dates as mdates
 
 # ----------------- CONFIG -----------------
-ALPHA_VANTAGE_API_KEY = 'SLNEQXVO3S7L9JTH'  
+ALPHA_VANTAGE_API_KEY = ''  
 SYMBOL = 'AMD'
 INTERVAL = 'Day'
 # ------------------------------------------
