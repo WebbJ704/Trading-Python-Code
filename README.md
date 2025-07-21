@@ -48,11 +48,11 @@ It’s designed to develop and evaluate rule-based strategies for different stoc
 ├── MACD_var.py           # MACD + ML-based parameter optimization
 ├── rules.py              # Trading logic rules (indicator-based)
 ├── signals.py            # Signal generator (MACD, BB, etc.)
-├── bt.py                 # Backtesting engine
-├── bs.py                 # Bootstrap sampling
-├── pl.py                 # Plotting utilities
-├── dataDownload.py       # Yahoo Finance downloader
-├── PW.py                 # Portfolio weight optimization
+├── backtest.py           # Backtesting engine
+├── bootstrap.py          # Bootstrap sampling
+├── plotting.py           # Plotting utilities
+├── data_Download.py      # Yahoo Finance downloader
+├── Portfolio_weights.py  # Portfolio weight optimization
 ├── main.py               # End-to-end strategy runner
 ├── Trades/               # Output directory for trades per stock
 ├── README.md             # This file
