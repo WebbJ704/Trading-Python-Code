@@ -9,8 +9,8 @@ from alpaca_trade_api.rest import REST, TimeFrame
 from datetime import datetime
 
 # Alpaca API setup
-API_KEY = 'PKDYS2UOHMH6WP8MZF2V'
-SECRET_KEY = 'UN1gUNnffY1iqJDsM8GemUGoO1KwpjWqhTYbLSex'
+API_KEY = ''
+SECRET_KEY = ''
 BASE_URL = 'https://paper-api.alpaca.markets'
 api = REST(API_KEY, SECRET_KEY, BASE_URL)
 
