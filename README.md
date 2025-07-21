@@ -44,7 +44,7 @@ It’s designed to develop and evaluate rule-based strategies for different stoc
 ## Project Structure
 
 ```bash
-.
+SystemV6.
 ├── MACD_var.py           # MACD + ML-based parameter optimization
 ├── rules.py              # Trading logic rules (indicator-based)
 ├── signals.py            # Signal generator (MACD, BB, etc.)
