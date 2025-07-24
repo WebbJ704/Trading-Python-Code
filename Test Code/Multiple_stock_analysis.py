@@ -176,7 +176,7 @@ def main():
    ticker = ['AMD','NVDA','META','GOOGL','ASML','MSFT','AVGO','IBM','TSLA']
    start_date = "2010-10-01"
    end_date = "2025-05-21"
-   api = 'SLNEQXVO3S7L9JTH'
+   api = ''
    RSI_overbought = 70
    RSI_underbought =30
    RSI_window = 14

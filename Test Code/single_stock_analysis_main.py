@@ -14,7 +14,7 @@ def main():
     ticker = str(df['ticker'].iloc[0])
     start_date =df['start_date'].dt.strftime('%Y-%m-%d').iloc[0]
     end_date = df['end_date'].dt.strftime('%Y-%m-%d').iloc[0]
-    api = 'SLNEQXVO3S7L9JTH'
+    api = ''
     return_window = df['retrun_window'].iloc[0]
     RSI_window = df['RSI_window'].iloc[0]
     short_window = df['short_window'].iloc[0]

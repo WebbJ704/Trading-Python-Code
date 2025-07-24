@@ -8,7 +8,7 @@ from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
 #API key for fred
-fp.api_key = 'de118a94573cb3e139ad3fc2f0987e05'
+fp.api_key = ''
 
 #window to look at data 
 end = datetime.now()

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from alpha_vantage.timeseries import TimeSeries
 
 # Your Alpha Vantage API Key
-API_KEY = 'SLNEQXVO3S7L9JTH'
+API_KEY = ''
 
 import os
 

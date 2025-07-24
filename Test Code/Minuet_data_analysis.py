@@ -124,7 +124,7 @@ def returns(data,rolling_window):
 
 def main():
     ticker = 'GLD'
-    api = 'SLNEQXVO3S7L9JTH'
+    api = ''
     start_date = "2005-10-01"
     end_date = "2025-03-10"
     short_window = 1

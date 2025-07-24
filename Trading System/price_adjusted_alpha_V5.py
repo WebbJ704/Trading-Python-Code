@@ -7,7 +7,7 @@ import matplotlib.dates as mdates
 import requests
 
 # ----------------- CONFIG -----------------
-ALPHA_VANTAGE_API_KEY = 'SLNEQXVO3S7L9JTH'  
+ALPHA_VANTAGE_API_KEY = ''  
 SYMBOL = 'IBM'
 # ------------------------------------------
 
