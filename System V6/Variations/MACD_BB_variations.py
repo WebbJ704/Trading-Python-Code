@@ -6,47 +6,37 @@ import numpy as np
 from itertools import product
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
+from random import sample
 
 def MACD_variations(df):
-    fast_range , slow_range , signal_range , best_df , best_trades , sys_top_ten = MACD_settings(df)
-    fast_range , slow_range , signal_range , best_df , best_trades, sys_top_ten =  MACD_settings(df,slow_range,fast_range,signal_range)
+    window_range, lower_range, upper_range, fast_range , slow_range , signal_range , best_df , best_trades , sys_top_ten = MACD_settings(df)
+    window_range, lower_range, upper_range, fast_range , slow_range , signal_range , best_df , best_trades, sys_top_ten =  MACD_settings(df,slow_range,fast_range,signal_range, window_range, lower_range, upper_range)
     sys_rand = sys_top_ten.sample(n=1)
     fast = sys_rand.iloc[0]['fast']
     slow = sys_rand.iloc[0]['slow']
     signal = sys_rand.iloc[0]['signal']
+    window = sys_rand.iloc[0]['window']
+    lower = sys_rand.iloc[0]['lower']
+    upper = sys_rand.iloc[0]['upper']
     setting = {
                 "name": f"MACD_f{fast}_s{slow}_sig{signal}",
                 "fast": fast,
                 "slow": slow,
-                "signal": signal
+                "signal": signal,
+                "window": window,
+                "lower": lower,
+                "upper": upper
             }
     return setting , best_df , best_trades 
 
-def MACD_settings(df, sl = [21,50], f = [5,20], si = [5,25]):
+def MACD_settings(df, sl = [21,50], f = [5,20], si = [5,25], win = [10,30], l_std = [0.5,2.5], h_std = [0.5,2.5]):
     fasts = np.random.randint(f[0], f[1]+1, size=100) # best range 7,9
     slows = np.random.randint(sl[0], sl[1]+1, size=100) # best range 22,27
     signals = np.random.randint(si[0], si[1]+1, size=100) # best range 12,17
+    window = np.random.randint(win[0], win[1]+1, size=100) 
+    lower_std = np.round(np.random.uniform(l_std[0]-0.5, l_std[1]+0.5, size=100), 1)  # round to 1 decimal
+    upper_std = np.round(np.random.uniform(h_std[0]-0.5, h_std[1]+0.5, size=100), 1) 
 
-    """For Specific Settings"""
-    # fasts = [8,9,11,13,11]
-    # slows = [24,38,35,58,29]
-    # signals = [13,10,8,8,8]
-
-    """Finds the best for given range of settings"""
-    # fast_range = range(2, 20)    # 5 to 12
-    # slow_range = range(21, 60)   # 26 to 40
-    # signal_range = range(2, 18)  # 8 to 16
-    # all_variations = [
-    #     (f, s, sig)
-    #     for f, s, sig in itertools.product(fast_range, slow_range, signal_range)
-    #     if f < s
-    # ]
-    # print(f"Total combinations: {len(all_variations)}")  # ~720 unique combos
-    # Example to get separate lists
-    # fasts = [x[0] for x in all_variations]
-    # slows = [x[1] for x in all_variations]
-    # signals = [x[2] for x in all_variations]
-    
     macd_settings = []
     for i in range(len(fasts)):
        # if (slows[i] > fasts[i]) and (fasts[i] < signals[i]):
@@ -55,11 +45,15 @@ def MACD_settings(df, sl = [21,50], f = [5,20], si = [5,25]):
                 "name": name,
                 "fast": int(fasts[i]),
                 "slow": int(slows[i]),
-                "signal": int(signals[i])
+                "signal": int(signals[i]),
+                "window": int(window[i]),
+                "lower std": int(lower_std[i]),
+                "upper std": int(upper_std[i])
             })
     
     model_data, system_output , sig , best_df , best_trades, best_system = back_test_variations(df, macd_settings)
-    fast_range , slow_range , signal_range = ML_settings(model_data)
+    print("Backtest complete")
+    fast_range , slow_range , signal_range, window_range, lower_range, upper_range = ML_settings(model_data)
 
     syst_out = pd.DataFrame(system_output)
     syst_out.set_index('setting', inplace = True)
@@ -71,7 +65,7 @@ def MACD_settings(df, sl = [21,50], f = [5,20], si = [5,25]):
     print(best_sys_out)
     print(syst_top_ten)
 
-    return fast_range , slow_range , signal_range , best_df , best_trades , syst_top_ten
+    return window_range, lower_range, upper_range, fast_range , slow_range , signal_range , best_df , best_trades , syst_top_ten
     
 def back_test_variations(df, macd_settings): 
     best_system = None
@@ -83,7 +77,8 @@ def back_test_variations(df, macd_settings):
     system_output =[]
     model_data = []
     for idx, setting in enumerate(macd_settings, 1):
-            df = rules.Rules(df, EMA_short = setting['fast'], EMA_long = setting['slow'], EMA_signal = setting['signal'], dropna=False)
+            df = rules.Rules(df, EMA_short = setting['fast'], EMA_long = setting['slow'], EMA_signal = setting['signal'], 
+                                 BB_window = setting['window'], BB_std_dev_top = setting['upper std'], BB_std_dev_bottom = setting['lower std'], dropna=False)
             df = Sig.generate_signals(df,
                                         use_ADX=False,
                                         use_RSI=False,
@@ -109,6 +104,9 @@ def back_test_variations(df, macd_settings):
             model_data.append({     'fast': setting['fast'],
                                     'slow': setting['slow'],
                                     'signal': setting['signal'],
+                                    'window': setting['window'],
+                                    'lower': setting['lower std'],
+                                    'upper': setting['upper std'],
                                     'sharp': sharp,
                                 })
             if sharp > best_score:
@@ -127,13 +125,14 @@ def back_test_variations(df, macd_settings):
             print(f"\rProgress: {idx}/{total} ({percent:.1f}%)",end='')
     return model_data, system_output , sig , best_df , best_trades, best_system
 
-def ML_settings(model_data, min_score=0.5, max_retries=10):
+def ML_settings(model_data, min_score=0.25, max_retries=5):
+    print("Starting ML_settings()")
     df_model = pd.DataFrame(model_data)
 
     # Drop rows with NaN in sharp, low, high, or window
-    df_model = df_model.dropna(subset=['sharp','fast','slow','signal'])
+    df_model = df_model.dropna(subset=['sharp', 'lower', 'upper', 'window','fast','slow','signal'])
 
-    X = df_model[['fast', 'slow', 'signal']]
+    X = df_model[['fast', 'slow', 'signal','window','lower','upper']]
     y = df_model['sharp']
 
     test_score = 0
@@ -142,8 +141,11 @@ def ML_settings(model_data, min_score=0.5, max_retries=10):
 
     while test_score < min_score and retries < max_retries:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+        print('model split done')
         model = RandomForestRegressor(n_estimators=100, max_depth = 5, random_state=retries)  # vary random_state
+        print('model initaliseed')
         model.fit(X_train, y_train)
+        print('model fit done')
         train_score = model.score(X_train, y_train)
         test_score = model.score(X_test, y_test)
         retries += 1
@@ -154,8 +156,22 @@ def ML_settings(model_data, min_score=0.5, max_retries=10):
     if test_score < min_score:
         print(f"Warning: Final model score ({test_score:.3f}) is still below {min_score}")
 
-    # Predict over grid
-    new_params = pd.DataFrame(product(range(5, 21), range(21, 51), range(5, 26)), columns=['fast', 'slow', 'signal'])
+
+    # Create the full product
+    full_grid = list(product(
+        range(5, 21),           # fast
+        range(21, 51),          # slow
+        range(5, 26),           # signal
+        range(10, 50),          # window
+        np.round(np.arange(0.5, 2.6, 0.1), 1),  # lower
+        np.round(np.arange(0.5, 2.6, 0.1), 1)   # upper
+    ))
+
+    # Sample a manageable number
+    grid_sample = sample(full_grid, 5000)  # try 5k to 10k for now
+
+    # Convert to DataFrame
+    new_params = pd.DataFrame(grid_sample, columns=['fast', 'slow', 'signal','window','lower','upper'])
     new_params = new_params[new_params['fast'] < new_params['slow']]
     new_params['predicted_sharpe'] = model.predict(new_params)
 
@@ -167,5 +183,8 @@ def ML_settings(model_data, min_score=0.5, max_retries=10):
     fast_range = [best['fast'].min(), best['fast'].max()]
     slow_range = [best['slow'].min(), best['slow'].max()]
     signal_range = [best['signal'].min(), best['signal'].max()]
+    window_range = [best['window'].min(), best['window'].max()]
+    lower_range = [best['lower'].min(), best['lower'].max()]
+    upper_range = [best['upper'].min(), best['upper'].max()]
 
-    return fast_range, slow_range, signal_range
+    return fast_range, slow_range, signal_range, window_range, lower_range, upper_range

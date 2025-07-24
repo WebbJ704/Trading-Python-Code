@@ -1,6 +1,6 @@
 import data_download as dataDownlaod
 import matplotlib.pyplot as plt
-from Variations import Get_MACD_variations as MACD_var
+from Variations import MACD_BB_variations as var
 import Portfolio_weights as PW
 import Plotting as pl
 import Rules as rules
@@ -11,17 +11,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # ----------------- CONFIG -----------------
-SYMBOL = ['AAPL','MSFT']
+SYMBOL = ['AAPL','MSFT','GOOGL']
 # ------------------------------------------
 if __name__ == "__main__" :
-    Trades_stocks = []
+    Trades_stocks_train = []
     for ticker in SYMBOL:
-        df = dataDownlaod.fetch_yf_data(ticker,'2023-01-18','2024-01-18')
+        df_train = dataDownlaod.fetch_yf_data(ticker,'2023-01-18','2024-01-18')
     
         #MACD and BB (yet to finish need to optimise for BB as well as MACD)
-        setting , best_df , best_trades = MACD_var.MACD_variations(df)
-        df = rules.Rules(df, EMA_short = setting['fast'], EMA_long = setting['slow'], EMA_signal = setting['signal'], dropna=False)
-        df = Sig.generate_signals(df,
+        setting , best_df , best_trades = var.MACD_variations(df_train)
+        df_train = rules.Rules(df_train, EMA_short = setting['fast'], EMA_long = setting['slow'], EMA_signal = setting['signal'], 
+                        BB_window = setting['window'], BB_std_dev_top = setting['upper'], BB_std_dev_bottom = setting['lower'], dropna=False)
+        df_train = Sig.generate_signals(df_train,
                                     use_ADX=False,
                                     use_RSI=False,
                                     use_EMA=False,
@@ -30,23 +31,26 @@ if __name__ == "__main__" :
                                     use_volume_spike=False,
                                     use_stochastic=False,
                                     use_BB=True )
-        trades, signal = bt.backtest(df,use_macd_exit = True,use_bb_exit = True)
+        trades, signal = bt.backtest(df_train,use_macd_exit = True, use_bb_exit = True)
         results, simulations = bs.bootstrap(trades)
         trades = trades.reset_index(drop=False) 
         trades['SYMBOL'] = ticker  # Important for optimization
-        Trades_stocks.append(trades)
+        Trades_stocks_train.append(trades)
 
     # Find weights
-    all_trades = pd.concat(Trades_stocks, ignore_index=True)  
+    all_trades = pd.concat(Trades_stocks_train, ignore_index=True)  
     weights, sharpe, equity = PW.optimize_portfolio_weights_from_dataframe(all_trades)
     print("Optimized Weights From Back Test:\n", weights)
     print(f"Sharpe Ratio of backtest weights: {sharpe:.2f}")
     
+    Trades_stocks_test = []
     for ticker in SYMBOL:
         #MACD out of sample testing 
-        df = dataDownlaod.fetch_yf_data(ticker,'2024-01-18')
-        df = rules.Rules(df, EMA_short = setting['fast'], EMA_long = setting['slow'], EMA_signal = setting['signal'], dropna=False)
-        df = Sig.generate_signals(df,
+        df_test = dataDownlaod.fetch_yf_data(ticker,'2024-01-18')
+        print('Final seetting used on test data',pd.DataFrame([setting]).set_index('name'))
+        df_test = rules.Rules(df_test, EMA_short = setting['fast'], EMA_long = setting['slow'], EMA_signal = setting['signal'], 
+                                BB_window = setting['window'], BB_std_dev_top = setting['upper'], BB_std_dev_bottom = setting['lower'], dropna=False)
+        df_test = Sig.generate_signals(df_test,
                                     use_ADX=False,
                                     use_RSI=False,
                                     use_EMA=False,
@@ -55,18 +59,18 @@ if __name__ == "__main__" :
                                     use_volume_spike=False,
                                     use_stochastic=False,
                                     use_BB=True )
-        trades, signal = bt.backtest(df,use_macd_exit = True,use_bb_exit = True)
+        trades, signal = bt.backtest(df_test,use_macd_exit = True,use_bb_exit = True)
         results, simulations = bs.bootstrap(trades)
-        pl.plot(df, trades, results, simulations, BBMACD =True)
+        pl.plot(df_test, trades, results, simulations, ticker, BBMACD =True)
         print(signal[-1])
         trades = trades.reset_index(drop=False) 
         trades['SYMBOL'] = ticker  # Important for optimization
-        Trades_stocks.append(trades)
+        Trades_stocks_test.append(trades)
 
     #Perform on out of weights found from backtest
-    all_trades = pd.concat(Trades_stocks, ignore_index=True)  
+    all_trades = pd.concat(Trades_stocks_test, ignore_index=True)  
     weights, sharpe, equity = PW.optimize_portfolio_weights_from_dataframe(all_trades, user_weights=weights)
-    equity.plot(title='Strategy Equity Curve on out of sample test')
+    equity.plot(title=f'Strategy Equity Curve on Out-of-Sample Test{weights}', legend=False)
     print("Optimized Weights From Back Test:\n", weights)
     print(f"Sharpe Ratio of weights on out of sample test: {sharpe:.2f}")
     plt.show()

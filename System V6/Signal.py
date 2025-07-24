@@ -38,7 +38,7 @@ def generate_signals(df, **kwargs):
             conditions.append(df['EMA_short'].iloc[i] > df['EMA_long'].iloc[i])
 
         if use_MACD:
-            conditions.append(df['MACD'].iloc[i] > df['MACD_Signal'].iloc[i])
+            conditions.append(df['MACD'].iloc[i] < df['MACD_Signal'].iloc[i])
 
         if use_ATR:
             conditions.append(df['ATR'].iloc[i] > atr_mean)
@@ -54,14 +54,13 @@ def generate_signals(df, **kwargs):
             )
 
         if use_BB:
-            conditions.append(df['Close'].iloc[i] < df['BB_Lower'].iloc[i] and 
-                              df['Close'].iloc[i] > df['BB_Middle'].iloc[i])
+            conditions.append(df['Adj Close'].iloc[i] < df['BB_Lower'].iloc[i])
 
         if use_buy_sell:
-            conditions.append(df['Close'].iloc[i] < df['Close'].iloc[i-1]*buy_factor)
+            conditions.append(df['Adj Close'].iloc[i] < df['Adj Close'].iloc[i-1]*buy_factor)
 
         # Only assign signal if ALL enabled conditions are met
-        if any(conditions):
+        if all(conditions):
             df.loc[df.index[i], 'Signal'] = 1
 
     return df

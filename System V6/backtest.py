@@ -36,9 +36,9 @@ def backtest(df, **kwargs):
     sell_factor = kwargs.get("sell_factor",1.1)
 
     for i in range(1, len(df)-1):
-        if df['Signal'].iloc[i-1] == 1 and position == 0:
+        if df['Signal'].iloc[i] == 1 and position == 0:
             position = 1
-            entry_price = df['Open'].iloc[i]
+            entry_price = df['Adj Close'].iloc[i]
             entry_date = df.index[i]
             Signal.append(f'Buy - {entry_date, entry_price}')
 
@@ -50,12 +50,12 @@ def backtest(df, **kwargs):
 
             if use_take_profit_stop_loss:
                 exit_conditions.append(
-                    df['Close'].iloc[i] >= entry_price * take_profit or
-                    df['Close'].iloc[i] <= entry_price * stop_loss
+                    df['Adj Close'].iloc[i] >= entry_price * take_profit or
+                    df['Adj Close'].iloc[i] <= entry_price * stop_loss
                 )
 
             if use_macd_exit:
-                exit_conditions.append(df['MACD'].iloc[i] < df['MACD_Signal'].iloc[i])
+                exit_conditions.append(df['MACD'].iloc[i] > df['MACD_Signal'].iloc[i])
 
             if use_ADX_exit:
                 exit_conditions.append(df['ADX'].iloc[i] > adx_threshold)
@@ -76,15 +76,15 @@ def backtest(df, **kwargs):
                     df['%D'].iloc[i] > stochastic_upper
                 )
             if use_bb_exit:
-                exit_conditions.append(df['Close'].iloc[i] > df['BB_Upper'].iloc[i])
+                exit_conditions.append(df['Adj Close'].iloc[i] > df['BB_Upper'].iloc[i])
             
             if use_buy_sell_exit:
-                exit_conditions.append(df['Close'].iloc[i] > df['Close'].iloc[i-1]*sell_factor)
+                exit_conditions.append(df['Adj Close'].iloc[i] > df['Adj Close'].iloc[i-1]*sell_factor)
 
 
             # Exit trade if ALL of the enabled conditions are True
             if any(exit_conditions):
-                exit_price = df['Open'].iloc[i+1]
+                exit_price = df['Adj Close'].iloc[i]
                 exit_date = df.index[i+1]
                 trade_return = (exit_price - entry_price) / entry_price
                 trades.append({
@@ -100,8 +100,8 @@ def backtest(df, **kwargs):
         trades_df = pd.DataFrame(trades)
         trades_df.set_index('ExitDate', inplace=True)
         first_entry_date = trades_df['EntryDate'].iloc[0]
-        buy_hold_start_price = df.loc[first_entry_date, 'Close']
-        trades_df['BuyAndHold'] = df.loc[trades_df.index, 'Close'].values / buy_hold_start_price
+        buy_hold_start_price = df.loc[first_entry_date, 'Adj Close']
+        trades_df['BuyAndHold'] = df.loc[trades_df.index, 'Adj Close'].values / buy_hold_start_price
         trades_df['StrategyEquity'] = (1 + trades_df['Return']).cumprod()
     else:
         trades_df = pd.DataFrame(columns=['EntryDate', 'ExitDate', 'Return', 'BuyAndHold'])

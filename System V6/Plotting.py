@@ -7,7 +7,7 @@ def get_bins(data):
     n = len(data)
     return min(max(int(np.sqrt(n)), 10), 100) 
 
-def plot(df, trades, results, simulation, **kwargs,):
+def plot(df, trades, results, simulation, ticker, **kwargs):
 
     MACD = kwargs.get('MACD',False)
     RSI = kwargs.get('RSI',False)
@@ -21,11 +21,12 @@ def plot(df, trades, results, simulation, **kwargs,):
     BBMACD = kwargs.get("BBMACD",False)
 
 
+
     if MACD:
         trade_signals = df[df['Signal'] == 1]
         fig1, (ax1, ax2) = plt.subplots(nrows=2, figsize=(14, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
         # Price + EMAs + Signals (Top)
-        ax1.plot(df['Close'], label='Close Price', color='black')
+        ax1.plot(df['Adj Close'], label='Close Price', color='black')
         ax1.plot(df['EMA_short'], label='EMA short', color='orange')
         ax1.plot(df['EMA_long'], label='EMA long', color='blue')
         ax1.scatter(trade_signals.index, trade_signals['Close'], color='green', label='Signal', zorder=5)
@@ -54,7 +55,7 @@ def plot(df, trades, results, simulation, **kwargs,):
         trade_signals = df[df['Signal'] == 1]
         fig2, (ax1, ax2) = plt.subplots(nrows=2, figsize=(14, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
         # Price + EMAs + Signals (Top)
-        ax1.plot(df['Close'], label='Adj Close Price', color='black')
+        ax1.plot(df['Adj Close'], label='Adj Close Price', color='black')
         ax1.scatter(trade_signals.index, trade_signals['Close'], color='green', label='Signal', zorder=5)
         ax1.set_title("Trade Signals")
         ax1.set_ylabel("Price")
@@ -83,7 +84,7 @@ def plot(df, trades, results, simulation, **kwargs,):
         trade_signals = df[df['Signal'] == 1]
         fig3, ax = plt.subplots(figsize=(14, 8))
         # Price + EMAs + Signals (Top)
-        ax.plot(df['Close'], label='Adj Close Price', color='black')
+        ax.plot(df['Adj Close'], label='Adj Close Price', color='black')
         ax.scatter(trade_signals.index, trade_signals['Close'], color='green', label='Signal', zorder=5)
         ax.set_title(f"Trade Signals for buy factor {buy_factor} and sell factor {sell_factor}")
         ax.set_ylabel("Price")
@@ -98,7 +99,7 @@ def plot(df, trades, results, simulation, **kwargs,):
         fig4, (ax1, ax2) = plt.subplots(nrows=2, figsize=(14, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
         
         # Price + BB Bands + Signals (Top)
-        ax1.plot(df.index, df['Close'], label='Close Price', color='black')
+        ax1.plot(df.index, df['Adj Close'], label='Close Price', color='black')
         ax1.plot(df.index, df['BB_Middle'], label='BB middle', color='orange')   # fixed 'middel' to 'middle'
         ax1.plot(df.index, df['BB_Upper'], linestyle='--', label='BB upper', color='blue')
         ax1.plot(df.index, df['BB_Lower'], linestyle='--', label='BB lower', color='cyan')  # different color
@@ -131,11 +132,11 @@ def plot(df, trades, results, simulation, **kwargs,):
         fig5, (ax1, ax2) = plt.subplots(nrows=2, figsize=(14, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
         
         # Price + BB Bands + Signals (Top)
-        ax1.plot(df.index, df['Close'], label='Close Price', color='black')
+        ax1.plot(df.index, df['Adj Close'], label='Close Price', color='black')
         ax1.plot(df.index, df['BB_Middle'], label='BB middle', color='orange')   # fixed 'middel' to 'middle'
         ax1.plot(df.index, df['BB_Upper'], linestyle='--', label='BB upper', color='blue')
         ax1.plot(df.index, df['BB_Lower'], linestyle='--', label='BB lower', color='cyan')  # different color
-        ax1.scatter(trade_signals.index, trade_signals['Close'], color='green', label='Signal', zorder=5)
+        ax1.scatter(trade_signals.index, trade_signals['Adj Close'], color='green', label='Signal', zorder=5)
         ax1.set_title("Trade Signals")
         ax1.set_ylabel("Price")
         ax1.legend()
@@ -146,7 +147,7 @@ def plot(df, trades, results, simulation, **kwargs,):
         # MACD (Bottom) 
         ax2.plot(df['MACD_Signal'], label='MACD signal', color='gold')
         ax2.plot(df['MACD'], label='MACD', color='green')
-        ax2.set_title("MACD")
+        ax2.set_title(f"{ticker} MACD")
         ax2.set_xlabel("Date")
         ax2.set_ylabel("MACD")
         ax2.legend()
@@ -168,7 +169,7 @@ def plot(df, trades, results, simulation, **kwargs,):
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
     ax.tick_params(axis='x', rotation=45)
     # Add titles and labels
-    ax.set_title('Cumulative Returns Comparison')
+    ax.set_title(f'{ticker}Cumulative Returns Comparison')
     ax.legend()
     ax.grid()
     plt.tight_layout()
