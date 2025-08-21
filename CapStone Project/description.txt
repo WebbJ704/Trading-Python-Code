@@ -1,0 +1,60 @@
+CapstoneV1 - Developed a full pipeline for quantitative trading strategy research and evaluation using Python. The project:
+
+Data Acquisition: Collected and stored historical market data from Yahoo Finance with caching for efficiency.
+
+Feature Engineering: Implemented the Stochastic Oscillator and trading signal generation logic to identify entry/exit opportunities.
+
+Backtesting: Built a rule-based strategy simulator to track trades, equity curves, and compute performance metrics such as Sharpe ratio.
+
+Statistical Analysis: Applied bootstrapping and t-tests to assess whether the strategy outperforms a buy-and-hold benchmark with statistical significance.
+
+Optimisation: Integrated Bayesian and Random Forest hyperparameter search to tune technical indicator thresholds for robust performance.
+
+Visualisation: Created histograms, distributions, and cumulative return plots for interpretability and performance comparison.
+
+This project combines data science, financial engineering, and machine learning optimisation to investigate systematic trading signals and evaluate their reliability against traditional benchmarks.
+
+
+CapstoneV2 - 
+
+Data acquisition
+
+Downloads stock data from Yahoo Finance (via yfinance)
+
+Saves to CSV for re-use (so you don’t hammer Yahoo’s servers every time)
+
+Feature engineering
+
+Implements Stochastic Oscillator (%K, %D)
+
+Generates trading signals when oversold + crossover
+
+Backtesting engine
+
+Opens trades when signals trigger
+
+Closes trades when overbought + crossover
+
+Tracks equity curve, strategy returns, and Sharpe ratio
+
+Statistical evaluation
+
+Bootstrapping Sharpe ratios for robustness
+
+Two-sample t-test: strategy vs buy & hold
+
+Optimisation
+
+Functions for hyperparameter search (Optuna-style objective)
+
+Tunes oscillator window lengths & thresholds
+
+Visualisation
+
+Distributions of returns, std devs, Sharpe ratios
+
+Cumulative returns comparison (Strategy vs Buy & Hold)
+
+CapstoneV3 - Porfolio Optimistion 
+
+Modular_syst - framework to test multiple different trading strategies 

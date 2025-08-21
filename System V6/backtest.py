@@ -3,6 +3,7 @@ import pandas as pd
 def backtest(df, **kwargs):
     trades = []
     Signal = []
+    df['Sell Signal'] = 0
     position = 0
     entry_price = 0
     entry_date = None
@@ -95,6 +96,7 @@ def backtest(df, **kwargs):
                 Signal.append(f'Sell - {exit_date, exit_price}')
                 position = 0
                 entry_date = None
+                df.loc[i, "Sell Signal"] = 1 
 
     if trades:
         trades_df = pd.DataFrame(trades)

@@ -129,6 +129,7 @@ def plot(df, trades, results, simulation, ticker, **kwargs):
 
     if BBMACD:
         trade_signals = df[df['Signal'] == 1]
+        sell_signals = df[df['Sell Signal'] == 1]
         fig5, (ax1, ax2) = plt.subplots(nrows=2, figsize=(14, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
         
         # Price + BB Bands + Signals (Top)
@@ -136,7 +137,10 @@ def plot(df, trades, results, simulation, ticker, **kwargs):
         ax1.plot(df.index, df['BB_Middle'], label='BB middle', color='orange')   # fixed 'middel' to 'middle'
         ax1.plot(df.index, df['BB_Upper'], linestyle='--', label='BB upper', color='blue')
         ax1.plot(df.index, df['BB_Lower'], linestyle='--', label='BB lower', color='cyan')  # different color
-        ax1.scatter(trade_signals.index, trade_signals['Adj Close'], color='green', label='Signal', zorder=5)
+        ax1.plot(df.index, df['EMA_short'], label='EMA short', color='yellow')
+        ax1.plot(df.index, df['EMA_long'], label='EMA long', color='red')
+        ax1.scatter(trade_signals.index, trade_signals['Adj Close'], color='green', label='Buy Signals', zorder=5)
+        ax1.scatter(sell_signals.index, sell_signals['Adj Close'], color='red', label='Sell Signals', zorder=5)
         ax1.set_title("Trade Signals")
         ax1.set_ylabel("Price")
         ax1.legend()

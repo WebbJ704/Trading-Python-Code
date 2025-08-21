@@ -11,14 +11,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # ----------------- CONFIG -----------------
-SYMBOL = ['AAPL','MSFT','GOOGL']
+SYMBOL = ['AMD','NVDA']
 # ------------------------------------------
 if __name__ == "__main__" :
     Trades_stocks_train = []
+    Trades_stocks_test = []
     for ticker in SYMBOL:
-        df_train = dataDownlaod.fetch_yf_data(ticker,'2023-01-18','2024-01-18')
+        df_train = dataDownlaod.fetch_yf_data(ticker,'2023-01-18','2024-06-30')
     
-        #MACD and BB (yet to finish need to optimise for BB as well as MACD)
+        #Finding variations and bakctesting on train data
         setting , best_df , best_trades = var.MACD_variations(df_train)
         df_train = rules.Rules(df_train, EMA_short = setting['fast'], EMA_long = setting['slow'], EMA_signal = setting['signal'], 
                         BB_window = setting['window'], BB_std_dev_top = setting['upper'], BB_std_dev_bottom = setting['lower'], dropna=False)
@@ -37,16 +38,9 @@ if __name__ == "__main__" :
         trades['SYMBOL'] = ticker  # Important for optimization
         Trades_stocks_train.append(trades)
 
-    # Find weights
-    all_trades = pd.concat(Trades_stocks_train, ignore_index=True)  
-    weights, sharpe, equity = PW.optimize_portfolio_weights_from_dataframe(all_trades)
-    print("Optimized Weights From Back Test:\n", weights)
-    print(f"Sharpe Ratio of backtest weights: {sharpe:.2f}")
-    
-    Trades_stocks_test = []
-    for ticker in SYMBOL:
-        #MACD out of sample testing 
-        df_test = dataDownlaod.fetch_yf_data(ticker,'2024-01-18')
+
+        #out of sample testing 
+        df_test = dataDownlaod.fetch_yf_data(ticker,'2024-06-30')
         print('Final seetting used on test data',pd.DataFrame([setting]).set_index('name'))
         df_test = rules.Rules(df_test, EMA_short = setting['fast'], EMA_long = setting['slow'], EMA_signal = setting['signal'], 
                                 BB_window = setting['window'], BB_std_dev_top = setting['upper'], BB_std_dev_bottom = setting['lower'], dropna=False)
@@ -67,11 +61,17 @@ if __name__ == "__main__" :
         trades['SYMBOL'] = ticker  # Important for optimization
         Trades_stocks_test.append(trades)
 
+    # Find weights from train data
+    all_trades = pd.concat(Trades_stocks_train, ignore_index=True)  
+    weights, sharpe, equity = PW.optimize_portfolio_weights_from_dataframe(all_trades)
+    print("Optimized Weights From Back Test train data:\n", weights)
+    print(f"Sharpe Ratio of backtest weights on train darta: {sharpe:.2f}")
+
     #Perform on out of weights found from backtest
     all_trades = pd.concat(Trades_stocks_test, ignore_index=True)  
     weights, sharpe, equity = PW.optimize_portfolio_weights_from_dataframe(all_trades, user_weights=weights)
     equity.plot(title=f'Strategy Equity Curve on Out-of-Sample Test{weights}', legend=False)
-    print("Optimized Weights From Back Test:\n", weights)
+    print("Optimized Weights From Back Teston test data:\n", weights)
     print(f"Sharpe Ratio of weights on out of sample test: {sharpe:.2f}")
     plt.show()
 

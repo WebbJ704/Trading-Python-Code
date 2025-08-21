@@ -29,13 +29,13 @@ def MACD_variations(df):
             }
     return setting , best_df , best_trades 
 
-def MACD_settings(df, sl = [21,50], f = [5,20], si = [5,25], win = [10,30], l_std = [0.5,2.5], h_std = [0.5,2.5]):
+def MACD_settings(df, sl = [21,50], f = [5,20], si = [5,25], win = [10,30], l_std = [0.5,1.5], h_std = [0.5,2]):
     fasts = np.random.randint(f[0], f[1]+1, size=100) # best range 7,9
     slows = np.random.randint(sl[0], sl[1]+1, size=100) # best range 22,27
     signals = np.random.randint(si[0], si[1]+1, size=100) # best range 12,17
     window = np.random.randint(win[0], win[1]+1, size=100) 
-    lower_std = np.round(np.random.uniform(l_std[0]-0.5, l_std[1]+0.5, size=100), 1)  # round to 1 decimal
-    upper_std = np.round(np.random.uniform(h_std[0]-0.5, h_std[1]+0.5, size=100), 1) 
+    lower_std = np.round(np.random.uniform(l_std[0]-0.2, l_std[1], size=100), 1)  # round to 1 decimal
+    upper_std = np.round(np.random.uniform(h_std[0], h_std[1]+0.2, size=100), 1) 
 
     macd_settings = []
     for i in range(len(fasts)):
@@ -47,8 +47,8 @@ def MACD_settings(df, sl = [21,50], f = [5,20], si = [5,25], win = [10,30], l_st
                 "slow": int(slows[i]),
                 "signal": int(signals[i]),
                 "window": int(window[i]),
-                "lower std": int(lower_std[i]),
-                "upper std": int(upper_std[i])
+                "lower std": float(lower_std[i]),
+                "upper std": float(upper_std[i])
             })
     
     model_data, system_output , sig , best_df , best_trades, best_system = back_test_variations(df, macd_settings)
@@ -90,7 +90,7 @@ def back_test_variations(df, macd_settings):
                                         use_BB=True )
             trades, signal = bt.backtest(df,use_macd_exit = True, use_bb_exit = True)
             if trades.empty:
-                print(f"⚠️ Skipping empty trades for setting {setting['name']}")
+                print(f"Skipping empty trades for setting {setting['name']}")
                 continue
             trades['StrategyEquity'] = (1 + trades['Return']).cumprod()
             sharp = trades["Return"].mean() / trades['Return'].std()
@@ -125,7 +125,7 @@ def back_test_variations(df, macd_settings):
             print(f"\rProgress: {idx}/{total} ({percent:.1f}%)",end='')
     return model_data, system_output , sig , best_df , best_trades, best_system
 
-def ML_settings(model_data, min_score=0.25, max_retries=5):
+def ML_settings(model_data, min_score=0.5, max_retries=20):
     print("Starting ML_settings()")
     df_model = pd.DataFrame(model_data)
 
@@ -141,11 +141,8 @@ def ML_settings(model_data, min_score=0.25, max_retries=5):
 
     while test_score < min_score and retries < max_retries:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-        print('model split done')
         model = RandomForestRegressor(n_estimators=100, max_depth = 5, random_state=retries)  # vary random_state
-        print('model initaliseed')
         model.fit(X_train, y_train)
-        print('model fit done')
         train_score = model.score(X_train, y_train)
         test_score = model.score(X_test, y_test)
         retries += 1

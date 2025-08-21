@@ -1,0 +1,2 @@
+This systems enters on a trend and then will sell if the trend reverses. 
+However, if a breakout occurs then the system switches to a momentum inicator and waits for momentum to change to then sell 
